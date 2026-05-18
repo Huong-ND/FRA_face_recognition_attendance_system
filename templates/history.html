@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>FRA – History</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0f1117;--surface:#1a1d27;--card:#222536;--accent:#4f8ef7;--accent2:#3ddc84;--danger:#f7604f;--warn:#f7c44f;--text:#e8eaf0;--muted:#8891a8;--border:#2e3248}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif}
+    nav{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+    .logo{font-size:1.2rem;font-weight:700;color:var(--accent)}.logo span{color:var(--accent2)}
+    nav ul{list-style:none;display:flex;gap:4px}
+    nav ul li a{display:block;padding:6px 14px;border-radius:6px;color:var(--muted);text-decoration:none;font-size:.9rem}
+    nav ul li a:hover,nav ul li a.active{background:var(--card);color:var(--text)}
+    .page{padding:24px;max-width:1100px;margin:0 auto}
+    h1{font-size:1.2rem;font-weight:600;margin-bottom:20px;color:var(--muted)}h1 span{color:var(--text)}
+    .grid{display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start}
+    /* date list */
+    .date-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .date-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:.85rem;color:var(--muted);font-weight:600}
+    .date-list{max-height:600px;overflow-y:auto}
+    .date-item{
+      padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;
+      font-size:.88rem;transition:.12s;display:flex;justify-content:space-between;align-items:center;
+    }
+    .date-item:last-child{border-bottom:none}
+    .date-item:hover{background:var(--surface)}
+    .date-item.active{background:#1a2a3a;color:var(--accent)}
+    .date-count{font-size:.75rem;background:var(--surface);padding:2px 8px;border-radius:10px;color:var(--muted)}
+    /* detail */
+    .detail-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .detail-header{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .detail-title{font-weight:600}
+    table{width:100%;border-collapse:collapse}
+    th{padding:11px 16px;text-align:left;font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+    td{padding:11px 16px;font-size:.88rem;border-bottom:1px solid var(--border)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
+    .badge-ok{background:#1a3a2a;color:var(--accent2)}.badge-warn{background:#3a2e10;color:var(--warn)}.badge-err{background:#3a1a1a;color:var(--danger)}
+    .empty{padding:48px;text-align:center;color:var(--muted);font-size:.9rem}
+    .loading{padding:24px;text-align:center;color:var(--muted)}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo">FRA <span>●</span></div>
+  <ul>
+    <li><a href="/">Dashboard</a></li>
+    <li><a href="/attendance.html">Attendance</a></li>
+    <li><a href="/history.html" class="active">History</a></li>
+    <li><a href="/register.html">Register</a></li>
+    <li id="adminNavItem" style="display:none"><a href="/admin.html" style="color:#f7c44f">⚙ Admin</a></li>
+  </ul>
+</nav>
+<script>
+(async()=>{try{const r=await fetch('/api/auth/me');if(r.ok){const d=await r.json();if(d.role==='admin')document.getElementById('adminNavItem').style.display=''}}catch(e){}})();
+</script>
+<div class="page">
+  <h1>Lịch sử <span>Điểm danh</span></h1>
+  <div class="grid">
+    <!-- Date picker -->
+    <div class="date-card">
+      <div class="date-header">📅 Các ngày có dữ liệu</div>
+      <div class="date-list" id="dateList">
+        <div class="loading">Đang tải…</div>
+      </div>
+    </div>
+    <!-- Detail -->
+    <div class="detail-card">
+      <div class="detail-header">
+        <span class="detail-title" id="detailTitle">Chọn một ngày</span>
+        <span id="detailCount" style="font-size:.85rem;color:var(--muted)"></span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Tên</th><th>Mã SV</th><th>Giờ điểm danh</th><th>Độ tin cậy</th></tr>
+        </thead>
+        <tbody id="detailBody">
+          <tr><td colspan="5" class="empty">Chọn ngày bên trái để xem chi tiết</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+let dates = [];
+
+async function loadDates(){
+  const res = await fetch('/api/attendance/dates?test=0');
+  dates = await res.json();
+  const el = document.getElementById('dateList');
+  if(!dates.length){el.innerHTML='<div class="empty">Chưa có dữ liệu</div>';return;}
+  el.innerHTML = dates.map(d=>`
+    <div class="date-item" onclick="loadDate('${d}',this)">
+      <span>${formatDate(d)}</span>
+      <span class="date-count" id="cnt-${d}">…</span>
+    </div>`).join('');
+  // Load first date
+  const first = el.querySelector('.date-item');
+  if(first) first.click();
+}
+
+async function loadDate(date, el){
+  document.querySelectorAll('.date-item').forEach(e=>e.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('detailTitle').textContent = formatDate(date);
+  document.getElementById('detailBody').innerHTML='<tr><td colspan="5" class="loading">Đang tải…</td></tr>';
+  const res = await fetch(`/api/attendance/?date=${date}&test=0`);
+  const rows = await res.json();
+  const cntEl = document.getElementById(`cnt-${date}`);
+  if(cntEl) cntEl.textContent = rows.length;
+  document.getElementById('detailCount').textContent = rows.length + ' người';
+  if(!rows.length){
+    document.getElementById('detailBody').innerHTML='<tr><td colspan="5" class="empty">Không có dữ liệu</td></tr>';
+    return;
+  }
+  document.getElementById('detailBody').innerHTML = rows.map((r,i)=>{
+    const conf=(r.confidence*100).toFixed(1);
+    const cls=conf>=70?'badge-ok':conf>=50?'badge-warn':'badge-err';
+    const t=new Date(r.recognized_at).toLocaleTimeString('vi-VN');
+    return `<tr><td>${i+1}</td><td><strong>${r.name}</strong></td><td>${r.student_code||'—'}</td><td>${t}</td>
+    <td><span class="badge ${cls}">${conf}%</span></td></tr>`;
+  }).join('');
+}
+
+function formatDate(d){
+  const [y,m,day]=d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+loadDates();
+</script>
+</body>
+</html>

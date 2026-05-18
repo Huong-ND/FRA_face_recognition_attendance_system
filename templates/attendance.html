@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>FRA – Attendance</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0f1117;--surface:#1a1d27;--card:#222536;--accent:#4f8ef7;--accent2:#3ddc84;--danger:#f7604f;--warn:#f7c44f;--text:#e8eaf0;--muted:#8891a8;--border:#2e3248}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif}
+    #lockScreen{position:fixed;inset:0;background:rgba(10,12,18,.97);display:flex;align-items:center;justify-content:center;z-index:999}
+    .lock-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px 40px;width:360px;text-align:center}
+    .lock-icon{font-size:2.5rem;margin-bottom:12px}
+    .lock-box h2{font-size:1.1rem;font-weight:600;margin-bottom:6px}
+    .lock-box p{font-size:.85rem;color:var(--muted);margin-bottom:22px}
+    .inp-group{text-align:left;margin-bottom:14px}
+    .inp-group label{font-size:.8rem;color:var(--muted);display:block;margin-bottom:5px}
+    .inp-group input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.9rem}
+    .inp-group input:focus{outline:none;border-color:var(--accent)}
+    .btn-login{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:500;cursor:pointer;margin-top:4px}
+    .btn-login:hover{background:#3a7de0}
+    #loginErr{color:var(--danger);font-size:.82rem;margin-top:10px;min-height:16px}
+    nav{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+    .logo{font-size:1.2rem;font-weight:700;color:var(--accent)}.logo span{color:var(--accent2)}
+    nav ul{list-style:none;display:flex;gap:4px}
+    nav ul li a{display:block;padding:6px 14px;border-radius:6px;color:var(--muted);text-decoration:none;font-size:.9rem}
+    nav ul li a:hover,nav ul li a.active{background:var(--card);color:var(--text)}
+    .nav-right{display:flex;align-items:center;gap:8px}
+    .user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.82rem}
+    .user-role{background:#1a2a3a;color:var(--accent);border-radius:10px;padding:1px 8px;font-size:.72rem;font-weight:600}
+    .btn-logout{padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer}
+    .btn-logout:hover{background:var(--surface);color:var(--text)}
+    .page{padding:24px;max-width:1000px;margin:0 auto}
+    h1{font-size:1.2rem;font-weight:600;margin-bottom:20px;color:var(--muted)}h1 span{color:var(--text)}
+    .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+    input[type=date]{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.9rem}
+    .btn{padding:7px 18px;border-radius:7px;border:none;font-size:.85rem;font-weight:500;cursor:pointer;color:#fff;background:var(--accent)}
+    .btn:hover{background:#3a7de0}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse}
+    th{padding:12px 16px;text-align:left;font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+    td{padding:11px 16px;font-size:.9rem;border-bottom:1px solid var(--border)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
+    .badge-ok{background:#1a3a2a;color:var(--accent2)}.badge-warn{background:#3a2e10;color:var(--warn)}.badge-err{background:#3a1a1a;color:var(--danger)}
+    .empty{padding:48px;text-align:center;color:var(--muted)}
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+    .stat-label{font-size:.78rem;color:var(--muted);margin-bottom:4px}
+    .stat-value{font-size:1.6rem;font-weight:700}
+  </style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <h2>Yêu cầu đăng nhập Admin</h2>
+    <p>Trang Attendance chỉ dành cho tài khoản Admin</p>
+    <div class="inp-group"><label>Tên đăng nhập</label><input type="text" id="loginUser" value="admin"/></div>
+    <div class="inp-group"><label>Mật khẩu</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn-login" onclick="doLogin()">Đăng nhập</button>
+    <div id="loginErr"></div>
+  </div>
+</div>
+
+<div id="mainContent" style="display:none">
+<nav>
+  <div class="logo">FRA <span>●</span></div>
+  <ul>
+    <li><a href="/">Dashboard</a></li>
+    <li><a href="/attendance.html" class="active">Attendance</a></li>
+    <li><a href="/history.html">History</a></li>
+    <li><a href="/register.html">Register</a></li>
+    <li><a href="/admin.html" style="color:#f7c44f">⚙ Admin</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="user-chip"><span id="navUser">—</span><span class="user-role">ADMIN</span></div>
+    <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+  </div>
+</nav>
+<div class="page">
+  <h1>Danh sách <span>Điểm danh</span></h1>
+  <div class="toolbar">
+    <input type="date" id="dateInput"/>
+    <button class="btn" onclick="load()">Xem</button>
+  </div>
+  <div class="summary">
+    <div class="stat"><div class="stat-label">Tổng điểm danh</div><div class="stat-value" id="totalCount">—</div></div>
+    <div class="stat"><div class="stat-label">Tb. độ tin cậy</div><div class="stat-value" id="avgConf">—</div></div>
+    <div class="stat"><div class="stat-label">Ngày xem</div><div class="stat-value" style="font-size:1.1rem" id="viewDate">—</div></div>
+  </div>
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>Tên</th><th>Mã SV</th><th>Giờ</th><th>Độ tin cậy</th><th>Trạng thái</th></tr></thead>
+      <tbody id="tableBody"><tr><td colspan="6" class="empty">Chọn ngày và nhấn Xem</td></tr></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<script>
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  const d=await res.json();
+  if(!res.ok){document.getElementById('loginErr').textContent='❌ Sai tên đăng nhập hoặc mật khẩu';return;}
+  if(d.role!=='admin'){document.getElementById('loginErr').textContent='⛔ Tài khoản không có quyền Admin';return;}
+  unlock(u);
+}
+function unlock(u){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainContent').style.display='';
+  document.getElementById('navUser').textContent=u;
+  document.getElementById('dateInput').value=new Date().toISOString().split('T')[0];
+  load();
+}
+async function doLogout(){await fetch('/api/auth/logout',{method:'POST'});location.reload();}
+(async()=>{try{const r=await fetch('/api/auth/me');if(r.ok){const d=await r.json();if(d.role==='admin')unlock(d.username)}}catch(e){}})();
+
+async function load(){
+  const d=document.getElementById('dateInput').value;
+  document.getElementById('viewDate').textContent=d;
+  const res=await fetch(`/api/attendance/?date=${d}`);
+  const rows=await res.json();
+  document.getElementById('totalCount').textContent=rows.length;
+  const tbody=document.getElementById('tableBody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="empty">Không có dữ liệu cho ngày này</td></tr>';document.getElementById('avgConf').textContent='—';return;}
+  const avg=rows.reduce((s,r)=>s+r.confidence,0)/rows.length;
+  document.getElementById('avgConf').textContent=(avg*100).toFixed(1)+'%';
+  tbody.innerHTML=rows.map((r,i)=>{
+    const conf=(r.confidence*100).toFixed(1);
+    const cls=conf>=70?'badge-ok':conf>=50?'badge-warn':'badge-err';
+    const t=new Date(r.recognized_at).toLocaleTimeString('vi-VN');
+    return `<tr><td>${i+1}</td><td><strong>${r.name}</strong></td><td>${r.student_code||'—'}</td><td>${t}</td><td><span class="badge ${cls}">${conf}%</span></td><td><span class="badge badge-ok">✓ Có mặt</span></td></tr>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

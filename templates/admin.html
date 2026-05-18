@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>FRA – Admin</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0f1117;--surface:#1a1d27;--card:#222536;--accent:#4f8ef7;--accent2:#3ddc84;--danger:#f7604f;--warn:#f7c44f;--text:#e8eaf0;--muted:#8891a8;--border:#2e3248}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh}
+    #lockScreen{position:fixed;inset:0;background:rgba(10,12,18,.97);display:flex;align-items:center;justify-content:center;z-index:999}
+    .lock-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px 40px;width:360px;text-align:center}
+    .lock-icon{font-size:2.5rem;margin-bottom:12px}
+    .lock-box h2{font-size:1.1rem;font-weight:600;margin-bottom:6px}
+    .lock-box p{font-size:.85rem;color:var(--muted);margin-bottom:22px}
+    .inp-group{text-align:left;margin-bottom:14px}
+    .inp-group label{font-size:.8rem;color:var(--muted);display:block;margin-bottom:5px}
+    .inp-group input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.9rem}
+    .inp-group input:focus{outline:none;border-color:var(--accent)}
+    .btn-login{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:500;cursor:pointer;margin-top:4px}
+    .btn-login:hover{background:#3a7de0}
+    #loginErr{color:var(--danger);font-size:.82rem;margin-top:10px;min-height:16px}
+    nav{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+    .logo{font-size:1.2rem;font-weight:700;color:var(--accent)}.logo span{color:var(--accent2)}
+    .nav-links{list-style:none;display:flex;gap:4px}
+    .nav-links a{display:block;padding:6px 14px;border-radius:6px;color:var(--muted);text-decoration:none;font-size:.9rem}
+    .nav-links a:hover,.nav-links a.active{background:var(--card);color:var(--text)}
+    .nav-right{display:flex;align-items:center;gap:10px}
+    .user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.82rem}
+    .user-role{background:#1a2a3a;color:var(--accent);border-radius:10px;padding:1px 8px;font-size:.72rem;font-weight:600}
+    .btn-sm{padding:5px 14px;border-radius:6px;border:none;font-size:.82rem;cursor:pointer;font-weight:500}
+    .btn-danger-sm{background:#7d2a2a;color:#fff}.btn-danger-sm:hover{background:#682323}
+    .page{padding:24px;max-width:1300px;margin:0 auto}
+    h1{font-size:1.2rem;font-weight:600;color:var(--muted);margin-bottom:20px}h1 span{color:var(--text)}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+    /* stat grid – 4 cards */
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+    .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+    .stat-lbl{font-size:.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;line-height:1.4}
+    .stat-val{font-size:1.7rem;font-weight:700}
+    .stat-sub{font-size:.72rem;color:var(--muted);margin-top:4px;line-height:1.4}
+    /* tabs */
+    .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:24px;width:fit-content}
+    .tab{padding:7px 20px;border-radius:7px;border:none;font-size:.88rem;cursor:pointer;background:transparent;color:var(--muted);font-weight:500;transition:.15s}
+    .tab.active{background:var(--card);color:var(--text)}
+    /* chart cards */
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+    .chart-title{font-size:.95rem;font-weight:600;margin-bottom:4px}
+    .chart-subtitle{font-size:.78rem;color:var(--muted);margin-bottom:16px}
+    .chart-wrap{position:relative;width:100%}
+    /* date range row */
+    .date-range{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+    .date-range label{font-size:.82rem;color:var(--muted)}
+    .date-range input[type=date]{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:.84rem}
+    .btn{padding:6px 16px;border-radius:7px;border:none;font-size:.84rem;font-weight:500;cursor:pointer;color:#fff}
+    .btn-primary{background:var(--accent)}.btn-primary:hover{background:#3a7de0}
+    .btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted)}.btn-outline:hover{background:var(--surface);color:var(--text)}
+    /* table */
+    .table-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+    .table-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+    .scroll-x{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    th{padding:10px 14px;text-align:left;font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+    td{padding:10px 14px;font-size:.85rem;border-bottom:1px solid var(--border)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.025)}
+    .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:600}
+    .b-ok{background:#1a3a2a;color:#3ddc84}.b-warn{background:#3a2e10;color:#f7c44f}.b-err{background:#3a1a1a;color:#f7604f}
+    .b-new{background:#1a2a3a;color:#4f8ef7}.b-lfw{background:#2a1a3a;color:#b07ef7}
+    .conf-bar{display:inline-flex;align-items:center;gap:6px}
+    .conf-track{width:60px;height:6px;background:var(--surface);border-radius:3px;overflow:hidden}
+    .conf-fill{height:100%;border-radius:3px}
+    .empty{padding:48px;text-align:center;color:var(--muted);font-size:.88rem}
+    /* filter row */
+    .filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .filter-row select,.filter-row input[type=text]{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:.84rem}
+    /* pw form */
+    .form-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .form-header{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:600;font-size:.95rem}
+    .form-body{padding:18px}
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:5px}
+    .form-group input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.88rem}
+    .alert{padding:9px 14px;border-radius:8px;font-size:.85rem;margin-bottom:10px;display:none}
+    .alert-ok{background:#0d2218;color:#3ddc84;border:1px solid #2a7d4f}
+    .alert-err{background:#2a1010;color:#f7604f;border:1px solid #7d2a2a}
+    @media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <h2>Admin Access Required</h2>
+    <p>Đăng nhập bằng tài khoản Admin để tiếp tục</p>
+    <div class="inp-group"><label>Tên đăng nhập</label><input type="text" id="loginUser" value="admin"/></div>
+    <div class="inp-group"><label>Mật khẩu</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn-login" onclick="doLogin()">Đăng nhập</button>
+    <div id="loginErr"></div>
+  </div>
+</div>
+
+<div id="mainContent" style="display:none">
+<nav>
+  <div class="logo">FRA <span>●</span></div>
+  <ul class="nav-links">
+    <li><a href="/">Dashboard</a></li>
+    <li><a href="/attendance.html">Attendance</a></li>
+    <li><a href="/history.html">History</a></li>
+    <li><a href="/register.html">Register</a></li>
+    <li><a href="/admin.html" class="active">Admin</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="user-chip"><span id="navUser">—</span><span class="user-role">ADMIN</span></div>
+    <button class="btn-sm btn-danger-sm" onclick="doLogout()">Đăng xuất</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1>Admin <span>Dashboard</span></h1>
+    <button class="btn btn-outline" onclick="refreshAll()">↺ Làm mới</button>
+  </div>
+
+  <!-- ── Stat cards ── -->
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-lbl">Tổng sinh viên</div>
+      <div class="stat-val" id="sTotal">—</div>
+      <div class="stat-sub">đã enroll</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">TB Confidence<br><span style="color:var(--accent2)">(lần đầu/người/ngày)</span></div>
+      <div class="stat-val" id="sAvgFirst">—</div>
+      <div class="stat-sub" id="sAvgFirstSub">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Tỉ lệ nhận diện thành công<br><span style="color:var(--accent2)">(người thành công / tổng quét)</span></div>
+      <div class="stat-val" id="sSuccessRate">—</div>
+      <div class="stat-sub" id="sSuccessSub">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">TB Confidence<br><span style="color:var(--warn)">(theo lượt quét)</span></div>
+      <div class="stat-val" id="sAvgAll">—</div>
+      <div class="stat-sub" id="sAvgAllSub" style="color:var(--warn)">chỉ mang tính tham khảo, có thể bị trùng lặp</div>
+    </div>
+  </div>
+
+  <!-- ── Tabs ── -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('charts')">📊 Biểu đồ</button>
+    <button class="tab" onclick="switchTab('logs')">📋 Chi tiết quét</button>
+    <button class="tab" onclick="switchTab('password')">🔑 Đổi mật khẩu</button>
+  </div>
+
+  <!-- ══════════════ Tab: Charts ══════════════ -->
+  <div id="tabCharts">
+    <!-- Date range filter (shared) -->
+    <div class="date-range">
+      <label>Từ:</label><input type="date" id="chartFrom"/>
+      <label>Đến:</label><input type="date" id="chartTo"/>
+      <button class="btn btn-primary" onclick="loadCharts()">Xem</button>
+      <button class="btn btn-outline" onclick="setRange(7)">7 ngày</button>
+      <button class="btn btn-outline" onclick="setRange(30)">30 ngày</button>
+      <button class="btn btn-outline" onclick="setRange(0)">Tất cả</button>
+    </div>
+
+    <!-- Chart 1: Điểm danh thành công -->
+    <div class="chart-card">
+      <div class="chart-title">Điểm danh thành công</div>
+      <div class="chart-subtitle">Chỉ ghi nhận lần đầu của mỗi sinh viên trong ngày (confidence ≥ 70%). Confidence hiển thị là lần nhận diện đầu tiên thành công.</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="chartAttendance" role="img" aria-label="Biểu đồ điểm danh thành công theo ngày"></canvas>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:.75rem;color:var(--muted)">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#3ddc84;margin-right:4px"></span>Số sinh viên điểm danh</span>
+        <span><span style="display:inline-block;width:30px;height:2px;background:#4f8ef7;margin-right:4px;vertical-align:middle"></span>Tb. Confidence</span>
+      </div>
+    </div>
+
+    <!-- Chart 2: Tất cả lần quét -->
+    <div class="chart-card">
+      <div class="chart-title">Tất cả các lần quét</div>
+      <div class="chart-subtitle">Ghi nhận TẤT CẢ các lần quét khuôn mặt, kể cả thất bại. Phân loại theo kết quả nhận diện.</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="chartScans" role="img" aria-label="Biểu đồ tất cả lần quét theo ngày"></canvas>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:.75rem;color:var(--muted)">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#3ddc84;margin-right:4px"></span>Confident ≥ 70%</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f7c44f;margin-right:4px"></span>Uncertain 50–70%</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f7604f;margin-right:4px"></span>Unknown &lt; 50%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ Tab: Scan logs ══════════════ -->
+  <div id="tabLogs" style="display:none">
+    <div class="table-card">
+      <div class="table-header">
+        <span style="font-weight:600">Chi tiết tất cả các lần quét</span>
+        <span id="logCount" style="font-size:.82rem;color:var(--muted)"></span>
+      </div>
+      <!-- Filters -->
+      <div style="padding:12px 18px;border-bottom:1px solid var(--border)">
+        <div class="filter-row">
+          <div class="date-range" style="margin-bottom:0">
+            <label>Từ:</label><input type="date" id="logFrom"/>
+            <label>Đến:</label><input type="date" id="logTo"/>
+          </div>
+          <select id="logResult">
+            <option value="all">Tất cả kết quả</option>
+            <option value="confident">✓ Thành công (≥70%)</option>
+            <option value="uncertain">⚠ Không chắc (50–70%)</option>
+            <option value="unknown">✗ Thất bại (&lt;50%)</option>
+          </select>
+          <input type="text" id="logName" placeholder="Tìm theo tên…" style="width:180px"/>
+          <button class="btn btn-primary" onclick="loadLogs()">Lọc</button>
+          <button class="btn btn-outline" onclick="clearLogFilters()">Xóa lọc</button>
+        </div>
+      </div>
+      <div class="scroll-x">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Giờ</th><th>Tên nhận diện</th><th>Mã SV</th><th>Confidence</th><th>Kết quả</th></tr>
+          </thead>
+          <tbody id="logBody"><tr><td colspan="6" class="empty">Chọn bộ lọc và nhấn Lọc</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ Tab: Password ══════════════ -->
+  <div id="tabPassword" style="display:none">
+    <div style="max-width:420px">
+      <div class="form-card">
+        <div class="form-header">🔑 Đổi mật khẩu Admin</div>
+        <div class="form-body">
+          <div class="form-group"><label>Mật khẩu hiện tại</label><input type="password" id="pwOld" placeholder="••••••••"/></div>
+          <div class="form-group"><label>Mật khẩu mới</label><input type="password" id="pwNew" placeholder="••••••••"/></div>
+          <div class="form-group"><label>Xác nhận mật khẩu mới</label><input type="password" id="pwConfirm" placeholder="••••••••"/></div>
+          <div class="alert alert-ok" id="pwOk"></div>
+          <div class="alert alert-err" id="pwErr"></div>
+          <button class="btn btn-primary" onclick="changePassword()" style="width:100%;padding:10px">Cập nhật mật khẩu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+</div><!-- /mainContent -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  const d=await res.json();
+  if(!res.ok){document.getElementById('loginErr').textContent='❌ Sai tên đăng nhập hoặc mật khẩu';return;}
+  if(d.role!=='admin'){document.getElementById('loginErr').textContent='⛔ Tài khoản không có quyền Admin';return;}
+  unlock(u);
+}
+function unlock(u){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainContent').style.display='';
+  document.getElementById('navUser').textContent=u;
+  refreshAll();
+}
+async function doLogout(){await fetch('/api/auth/logout',{method:'POST'});location.reload();}
+(async()=>{try{const r=await fetch('/api/auth/me');if(r.ok){const d=await r.json();if(d.role==='admin')unlock(d.username)}}catch(e){}})();
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(name){
+  ['charts','logs','password'].forEach(t=>{
+    document.getElementById('tab'+cap(t)).style.display=t===name?'':'none';
+  });
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    el.classList.toggle('active',['charts','logs','password'][i]===name);
+  });
+  if(name==='logs') loadLogs();
+}
+function cap(s){return 'tab'+s.charAt(0).toUpperCase()+s.slice(1);}
+
+// ── Top stats ─────────────────────────────────────────────────────────────────
+async function loadTopStats(){
+  try{
+    const res=await fetch('/api/admin/top-stats');
+    const d=await res.json();
+    document.getElementById('sTotal').textContent=d.total_students;
+    document.getElementById('sAvgFirst').textContent=d.avg_conf_first.toFixed(1)+'%';
+    document.getElementById('sAvgFirstSub').textContent=d.total_attendance+' lần điểm danh';
+    document.getElementById('sSuccessRate').textContent=d.success_rate.toFixed(1)+'%';
+    document.getElementById('sSuccessSub').textContent=d.total_scans+' tổng lần quét';
+    document.getElementById('sAvgAll').textContent=d.avg_conf_all.toFixed(1)+'%';
+    document.getElementById('sAvgAllSub').textContent='('+d.total_scans+' lần) – chỉ tham khảo';
+  }catch(e){console.warn(e);}
+}
+
+async function refreshAll(){
+  await loadTopStats();
+  setDefaultDateRange();
+  loadCharts();
+}
+
+// ── Date range helpers ────────────────────────────────────────────────────────
+function setDefaultDateRange(){
+  const to=new Date(); const from=new Date(); from.setDate(from.getDate()-29);
+  document.getElementById('chartFrom').value=from.toISOString().split('T')[0];
+  document.getElementById('chartTo').value=to.toISOString().split('T')[0];
+  document.getElementById('logFrom').value=from.toISOString().split('T')[0];
+  document.getElementById('logTo').value=to.toISOString().split('T')[0];
+}
+function setRange(days){
+  const to=new Date(); const from=new Date();
+  if(days>0) from.setDate(from.getDate()-(days-1));
+  else{from.setFullYear(2020,0,1);}
+  document.getElementById('chartFrom').value=from.toISOString().split('T')[0];
+  document.getElementById('chartTo').value=to.toISOString().split('T')[0];
+  loadCharts();
+}
+function fmtDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day}/${m}`;}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+let cAttendance=null, cScans=null;
+
+async function loadCharts(){
+  const from=document.getElementById('chartFrom').value;
+  const to=document.getElementById('chartTo').value;
+  const [attRes, scanRes]=await Promise.all([
+    fetch(`/api/admin/chart-attendance?from=${from}&to=${to}`),
+    fetch(`/api/admin/chart-scans?from=${from}&to=${to}`),
+  ]);
+  const attData=await attRes.json();
+  const scanData=await scanRes.json();
+  drawAttendanceChart(attData);
+  drawScansChart(scanData);
+}
+
+function drawAttendanceChart(data){
+  const labels=data.map(r=>fmtDate(r.date));
+  const counts=data.map(r=>r.student_count);
+  const confs=data.map(r=>+(r.avg_confidence*100).toFixed(1));
+  if(cAttendance) cAttendance.destroy();
+  cAttendance=new Chart(document.getElementById('chartAttendance'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Sinh viên điểm danh',data:counts,backgroundColor:'rgba(61,220,132,.75)',borderRadius:4,yAxisID:'y'},
+        {label:'Tb. Confidence (%)',data:confs,type:'line',borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.1)',
+         borderWidth:2,pointRadius:3,pointBackgroundColor:'#4f8ef7',fill:true,yAxisID:'y2'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.yAxisID==='y2'?` Confidence: ${ctx.raw}%`:` ${ctx.raw} sinh viên`}}},
+      scales:{
+        x:{grid:{color:'#2e3248'},ticks:{color:'#8891a8',font:{size:11},maxTicksLimit:15,maxRotation:0}},
+        y:{grid:{color:'#2e3248'},ticks:{color:'#8891a8'},title:{display:true,text:'Số SV',color:'#8891a8',font:{size:11}},min:0},
+        y2:{position:'right',grid:{display:false},ticks:{color:'#4f8ef7',callback:v=>v+'%'},min:0,max:105,
+            title:{display:true,text:'Confidence',color:'#4f8ef7',font:{size:11}}},
+      }
+    }
+  });
+}
+
+function drawScansChart(data){
+  const labels=data.map(r=>fmtDate(r.date));
+  if(cScans) cScans.destroy();
+  cScans=new Chart(document.getElementById('chartScans'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Confident ≥70%', data:data.map(r=>r.confident_count), backgroundColor:'rgba(61,220,132,.8)',  borderRadius:2,stack:'s'},
+        {label:'Uncertain 50–70%',data:data.map(r=>r.uncertain_count),backgroundColor:'rgba(247,196,79,.8)',  borderRadius:2,stack:'s'},
+        {label:'Unknown <50%',    data:data.map(r=>r.unknown_count),  backgroundColor:'rgba(247,96,79,.8)',   borderRadius:2,stack:'s'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{stacked:true,grid:{color:'#2e3248'},ticks:{color:'#8891a8',font:{size:11},maxTicksLimit:15,maxRotation:0}},
+        y:{stacked:true,grid:{color:'#2e3248'},ticks:{color:'#8891a8'},min:0},
+      }
+    }
+  });
+}
+
+// ── Scan logs table ───────────────────────────────────────────────────────────
+async function loadLogs(){
+  const from  =document.getElementById('logFrom').value;
+  const to    =document.getElementById('logTo').value;
+  const result=document.getElementById('logResult').value;
+  const name  =document.getElementById('logName').value.trim();
+  let url=`/api/admin/logs?limit=500`;
+  if(from) url+=`&from=${from}`;
+  if(to)   url+=`&to=${to}`;
+  if(result&&result!=='all') url+=`&result=${result}`;
+  if(name) url+=`&name=${encodeURIComponent(name)}`;
+  const res=await fetch(url);
+  const rows=await res.json();
+  document.getElementById('logCount').textContent=rows.length+' bản ghi';
+  const tbody=document.getElementById('logBody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="empty">Không có dữ liệu</td></tr>';return;}
+  tbody.innerHTML=rows.map((r,i)=>{
+    const conf=(r.confidence*100).toFixed(1);
+    const cls=r.scan_result==='confident'?'b-ok':r.scan_result==='uncertain'?'b-warn':'b-err';
+    const resLabel=r.scan_result==='confident'?'✓ Thành công':r.scan_result==='uncertain'?'⚠ Không chắc':'✗ Thất bại';
+    const fillC=r.scan_result==='confident'?'#3ddc84':r.scan_result==='uncertain'?'#f7c44f':'#f7604f';
+    const t=new Date(r.scanned_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const dt=new Date(r.scanned_at).toLocaleDateString('vi-VN');
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="color:var(--muted);font-size:.8rem">${dt} ${t}</td>
+      <td><strong>${r.predicted_name||'Unknown'}</strong></td>
+      <td style="color:var(--muted)">${r.student_code||'—'}</td>
+      <td><div class="conf-bar">
+        <span class="badge ${cls}">${conf}%</span>
+        <div class="conf-track"><div class="conf-fill" style="width:${conf}%;background:${fillC}"></div></div>
+      </div></td>
+      <td><span class="badge ${cls}">${resLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function clearLogFilters(){
+  document.getElementById('logResult').value='all';
+  document.getElementById('logName').value='';
+  setDefaultDateRange();
+  loadLogs();
+}
+
+// ── Change password ───────────────────────────────────────────────────────────
+async function changePassword(){
+  const old_pw=document.getElementById('pwOld').value;
+  const new_pw=document.getElementById('pwNew').value;
+  const confirm=document.getElementById('pwConfirm').value;
+  if(new_pw!==confirm){pwErr('Mật khẩu xác nhận không khớp');return;}
+  const res=await fetch('/api/admin/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_password:old_pw,new_password:new_pw})});
+  const d=await res.json();
+  if(!res.ok){pwErr(d.error||'Thất bại');return;}
+  const e=document.getElementById('pwOk');e.textContent='✅ Đã cập nhật mật khẩu';e.style.display='block';
+  document.getElementById('pwErr').style.display='none';
+  ['pwOld','pwNew','pwConfirm'].forEach(id=>document.getElementById(id).value='');
+}
+function pwErr(m){const e=document.getElementById('pwErr');e.textContent=m;e.style.display='block';document.getElementById('pwOk').style.display='none';}
+
+function fmtD(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;}
+</script>
+</body>
+</html>

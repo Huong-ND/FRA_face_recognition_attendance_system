@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FRA – Face Recognition Attendance</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0f1117;--surface:#1a1d27;--card:#222536;
+      --accent:#4f8ef7;--accent2:#3ddc84;--danger:#f7604f;
+      --warn:#f7c44f;--text:#e8eaf0;--muted:#8891a8;
+      --border:#2e3248;--radius:10px;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh}
+    nav{
+      display:flex;align-items:center;justify-content:space-between;
+      background:var(--surface);border-bottom:1px solid var(--border);
+      padding:0 24px;height:56px;position:sticky;top:0;z-index:100;
+    }
+    nav .logo{font-size:1.2rem;font-weight:700;color:var(--accent);letter-spacing:.5px}
+    nav .logo span{color:var(--accent2)}
+    nav ul{list-style:none;display:flex;gap:4px}
+    nav ul li a{
+      display:block;padding:6px 14px;border-radius:6px;
+      color:var(--muted);text-decoration:none;font-size:.9rem;transition:.15s
+    }
+    nav ul li a:hover,nav ul li a.active{background:var(--card);color:var(--text)}
+    .page{padding:24px;max-width:1300px;margin:0 auto}
+    .badge{
+      display:inline-block;padding:2px 10px;border-radius:20px;
+      font-size:.75rem;font-weight:600;
+    }
+    .badge-ok{background:#1a3a2a;color:var(--accent2)}
+    .badge-warn{background:#3a2e10;color:var(--warn)}
+    .badge-err{background:#3a1a1a;color:var(--danger)}
+    .badge-info{background:#1a2a3a;color:var(--accent)}
+    button{cursor:pointer}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo">FRA <span>●</span></div>
+  <ul>
+    <li><a href="/" id="nav-dash">Dashboard</a></li>
+    <li><a href="/attendance.html" id="nav-att">Attendance</a></li>
+    <li><a href="/history.html" id="nav-hist">History</a></li>
+    <li><a href="/register.html" id="nav-reg">Register</a></li>
+  </ul>
+</nav>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>FRA – Dashboard</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0f1117;--surface:#1a1d27;--card:#222536;--accent:#4f8ef7;--accent2:#3ddc84;--danger:#f7604f;--warn:#f7c44f;--text:#e8eaf0;--muted:#8891a8;--border:#2e3248}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh}
+    nav{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+    .logo{font-size:1.2rem;font-weight:700;color:var(--accent)}.logo span{color:var(--accent2)}
+    nav ul{list-style:none;display:flex;gap:4px}
+    nav ul li a{display:block;padding:6px 14px;border-radius:6px;color:var(--muted);text-decoration:none;font-size:.9rem}
+    nav ul li a:hover,nav ul li a.active{background:var(--card);color:var(--text)}
+    .nav-right{display:flex;align-items:center;gap:8px}
+    .user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.82rem}
+    .user-role{background:#1a2a3a;color:var(--accent);border-radius:10px;padding:1px 8px;font-size:.72rem;font-weight:600}
+    .btn-sm{padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer}
+    .btn-sm:hover{background:var(--surface);color:var(--text)}
+    .page{padding:20px 24px;max-width:1400px;margin:0 auto}
+    h1{font-size:1.15rem;font-weight:600;margin-bottom:16px;color:var(--muted)}h1 span{color:var(--text)}
+    .main-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+    /* cam card */
+    .cam-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .cam-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+    .cam-title{font-weight:600;font-size:.95rem}
+    .btn{padding:6px 16px;border-radius:6px;border:none;font-size:.85rem;font-weight:500;cursor:pointer;color:#fff;transition:.15s}
+    .btn-primary{background:var(--accent)}.btn-primary:hover{background:#3a7de0}
+    .btn-danger{background:#7d2a2a}.btn-danger:hover{background:#682323}
+    .cam-body{position:relative;background:#000;aspect-ratio:16/9}
+    #videoEl{width:100%;height:100%;object-fit:cover;display:block}
+    #overlayCanvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+    .cam-footer{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted)}
+    #statusDot{width:8px;height:8px;border-radius:50%;background:#555;display:inline-block;margin-right:6px}
+    #statusDot.active{background:var(--accent2);box-shadow:0 0 6px var(--accent2)}
+    #statusDot.error{background:var(--danger)}
+    /* hint box */
+    .hint-box{background:#1a1d10;border:1px solid #3a3a10;border-radius:8px;padding:9px 14px;margin:10px 16px;font-size:.8rem;color:var(--warn);line-height:1.5;display:none}
+    .hint-box.show{display:block}
+    /* live faces */
+    .live-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:16px}
+    .live-card h3{font-size:.9rem;color:var(--muted);margin-bottom:10px}
+    .live-faces{display:flex;flex-wrap:wrap;gap:8px}
+    .face-tag{padding:5px 12px;border-radius:20px;font-size:.82rem;font-weight:500;border:1px solid var(--border)}
+    .face-tag.confident{border-color:#2a7d4f;color:var(--accent2);background:#0d2218}
+    .face-tag.uncertain{border-color:#7d6a2a;color:var(--warn);background:#221d0d}
+    .face-tag.unknown{border-color:#555;color:var(--muted);background:var(--surface)}
+    /* sidebar */
+    .side-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .side-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .side-title{font-weight:600;font-size:.95rem}
+    .side-body{max-height:520px;overflow-y:auto}
+    .att-item{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border)}
+    .att-item:last-child{border-bottom:none}
+    .avatar{width:38px;height:38px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0;color:#fff}
+    .att-info{flex:1;min-width:0}
+    .att-name{font-size:.9rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .att-time{font-size:.75rem;color:var(--muted)}
+    .att-conf{font-size:.75rem;font-weight:600}
+    .conf-high{color:var(--accent2)}.conf-mid{color:var(--warn)}.conf-low{color:var(--danger)}
+    .side-empty{padding:40px 16px;text-align:center;color:var(--muted);font-size:.9rem}
+    .side-footer{padding:10px 16px;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted);text-align:center}
+    .gallery-chip{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.78rem;color:var(--muted)}
+  </style>
+</head>
+<body>
+<nav>
+  <div class="logo">FRA <span>●</span></div>
+  <ul>
+    <li><a href="/" class="active">Dashboard</a></li>
+    <li><a href="/attendance.html">Attendance</a></li>
+    <li><a href="/history.html">History</a></li>
+    <li><a href="/register.html">Register</a></li>
+    <li id="adminNavItem" style="display:none"><a href="/admin.html" style="color:#f7c44f">⚙ Admin</a></li>
+  </ul>
+  <div class="nav-right" id="navAuthArea"></div>
+</nav>
+<script>
+(async()=>{
+  try{
+    const r=await fetch('/api/auth/me');
+    if(r.ok){
+      const d=await r.json();
+      if(d.role==='admin'){
+        document.getElementById('adminNavItem').style.display='';
+        document.getElementById('navAuthArea').innerHTML=
+          `<div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.82rem">
+            <span>${d.username}</span><span style="background:#1a2a3a;color:var(--accent);border-radius:10px;padding:1px 8px;font-size:.72rem;font-weight:600">ADMIN</span>
+           </div>
+           <button onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>location.reload())"
+             style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer">Đăng xuất</button>`;
+      }
+    }
+  }catch(e){}
+})();
+</script>
+
+<div class="page">
+  <h1>Face Recognition <span>Dashboard</span></h1>
+  <div class="main-grid">
+
+    <!-- Camera -->
+    <div>
+      <div class="cam-card">
+        <div class="cam-header">
+          <span class="cam-title">Live Camera</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="gallery-chip" id="galleryCount">⬤ … enrolled</span>
+            <button class="btn btn-primary" id="btnStart">▶ Start</button>
+            <button class="btn btn-danger"  id="btnStop" style="display:none">■ Stop</button>
+          </div>
+        </div>
+        <div class="cam-body">
+          <video id="videoEl" autoplay playsinline muted></video>
+          <canvas id="overlayCanvas"></canvas>
+        </div>
+        <!-- Hint shown when low-confidence face detected -->
+        <div class="hint-box" id="hintBox">
+          💡 <strong>Độ tin cậy dưới 70%</strong> — Hãy thay đổi góc mặt hoặc cải thiện ánh sáng khi quét để tăng độ chính xác.
+        </div>
+        <div class="cam-footer">
+          <span><span id="statusDot"></span><span id="statusMsg">Chưa khởi động</span></span>
+          <span id="fpsLabel">— fps</span>
+        </div>
+      </div>
+
+      <div class="live-card">
+        <h3>Khuôn mặt phát hiện</h3>
+        <div class="live-faces" id="liveFaces">
+          <span style="color:var(--muted);font-size:.85rem">Chưa phát hiện khuôn mặt nào</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance sidebar -->
+    <div>
+      <div class="side-card">
+        <div class="side-header">
+          <span class="side-title">Điểm danh hôm nay</span>
+          <span class="side-date" id="todayDate" style="font-size:.8rem;color:var(--muted)"></span>
+        </div>
+        <div class="side-body" id="attendanceList">
+          <div class="side-empty">Chưa có điểm danh</div>
+        </div>
+        <div class="side-footer" id="attCount">0 người</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let stream=null, running=false, frameTimer=null, fpsTimer=null, frameCount=0, busy=false;
+const video=document.getElementById('videoEl');
+const canvas=document.getElementById('overlayCanvas');
+const ctx=canvas.getContext('2d');
+
+document.getElementById('todayDate').textContent=new Date().toLocaleDateString('vi-VN');
+refreshGalleryCount();
+refreshAttendance();
+setInterval(refreshAttendance,5000);
+
+document.getElementById('btnStart').addEventListener('click',startCamera);
+document.getElementById('btnStop').addEventListener('click',stopCamera);
+
+async function startCamera(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{width:1280,height:720},audio:false});
+    video.srcObject=stream; await video.play();
+    running=true;
+    setStatus('active','Đang chạy');
+    document.getElementById('btnStart').style.display='none';
+    document.getElementById('btnStop').style.display='';
+    frameTimer=setInterval(captureAndSend,800);
+    fpsTimer=setInterval(()=>{document.getElementById('fpsLabel').textContent=frameCount+' frames/s';frameCount=0;},1000);
+  }catch(e){setStatus('error','Không mở được camera: '+e.message);}
+}
+function stopCamera(){
+  running=false;
+  clearInterval(frameTimer); clearInterval(fpsTimer);
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  stream=null; video.srcObject=null;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  document.getElementById('btnStart').style.display='';
+  document.getElementById('btnStop').style.display='none';
+  setStatus('','Đã dừng');
+  document.getElementById('liveFaces').innerHTML='<span style="color:var(--muted);font-size:.85rem">Chưa phát hiện khuôn mặt nào</span>';
+  document.getElementById('hintBox').classList.remove('show');
+}
+function setStatus(cls,msg){document.getElementById('statusDot').className=cls;document.getElementById('statusMsg').textContent=msg;}
+
+async function captureAndSend(){
+  if(!running||busy)return;
+  busy=true;
+  try{
+    const tmp=document.createElement('canvas');
+    tmp.width=video.videoWidth||640; tmp.height=video.videoHeight||360;
+    tmp.getContext('2d').drawImage(video,0,0);
+    const b64=tmp.toDataURL('image/jpeg',.8);
+    const res=await fetch('/api/camera/recognize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({frame:b64})});
+    const data=await res.json();
+    if(data.faces) renderResults(data.faces);
+    frameCount++;
+  }catch(e){console.warn(e);}
+  finally{busy=false;}
+}
+
+function renderResults(faces){
+  canvas.width=video.videoWidth||640; canvas.height=video.videoHeight||360;
+  const rect=video.getBoundingClientRect();
+  canvas.style.width=rect.width+'px'; canvas.style.height=rect.height+'px';
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  let hasLowConf=false;
+  faces.forEach(f=>{
+    const[x1,y1,x2,y2]=f.bbox;
+    const w=x2-x1, h=y2-y1;
+    const col=f.status==='confident'?'#3ddc84':f.status==='uncertain'?'#f7c44f':'#f7604f';
+    ctx.strokeStyle=col; ctx.lineWidth=2.5;
+    ctx.strokeRect(x1,y1,w,h);
+    const label=`${f.name}  ${(f.confidence*100).toFixed(0)}%`;
+    ctx.font='bold 14px Segoe UI, sans-serif';
+    const tw=ctx.measureText(label).width;
+    ctx.fillStyle='rgba(0,0,0,0.65)';
+    ctx.fillRect(x1,y1-26,tw+14,24);
+    ctx.fillStyle=col;
+    ctx.fillText(label,x1+7,y1-8);
+    if(f.landmarks){
+      ctx.fillStyle='#4f8ef7';
+      f.landmarks.forEach(([lx,ly])=>{ctx.beginPath();ctx.arc(lx,ly,3,0,Math.PI*2);ctx.fill();});
+    }
+    if(f.confidence < 0.70) hasLowConf=true;
+  });
+
+  // Show/hide hint
+  document.getElementById('hintBox').classList.toggle('show', hasLowConf && faces.length>0);
+
+  const tagsEl=document.getElementById('liveFaces');
+  if(!faces.length){tagsEl.innerHTML='<span style="color:var(--muted);font-size:.85rem">Chưa phát hiện khuôn mặt nào</span>';return;}
+  tagsEl.innerHTML=faces.map(f=>`<span class="face-tag ${f.status}">${f.name} · ${(f.confidence*100).toFixed(0)}%</span>`).join('');
+  if(faces.some(f=>f.marked)) refreshAttendance();
+}
+
+async function refreshAttendance(){
+  const today=new Date().toISOString().split('T')[0];
+  try{
+    const res=await fetch(`/api/attendance/?date=${today}`);
+    const rows=await res.json();
+    renderAttendance(rows);
+  }catch(e){}
+}
+
+function renderAttendance(rows){
+  const el=document.getElementById('attendanceList');
+  if(!rows||!rows.length){el.innerHTML='<div class="side-empty">Chưa có điểm danh</div>';document.getElementById('attCount').textContent='0 người';return;}
+  document.getElementById('attCount').textContent=rows.length+' người';
+  el.innerHTML=rows.map(r=>{
+    const initials=r.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const time=new Date(r.recognized_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+    const conf=(r.confidence*100).toFixed(0);
+    const confCls=conf>=70?'conf-high':conf>=50?'conf-mid':'conf-low';
+    return `<div class="att-item">
+      <div class="avatar" style="background:${strColor(r.name)}">${initials}</div>
+      <div class="att-info"><div class="att-name">${r.name}</div><div class="att-time">${time} · ${r.student_code||''}</div></div>
+      <span class="att-conf ${confCls}">${conf}%</span>
+    </div>`;
+  }).join('');
+}
+
+function strColor(s){let h=0;for(let c of s)h=(h*31+c.charCodeAt(0))&0xffffff;return['#2a5fd4','#2a7d4f','#7d2a5f','#5f2a7d','#2a7d7d','#7d5f2a'][h%6];}
+
+async function refreshGalleryCount(){
+  try{const res=await fetch('/api/camera/gallery-info');const d=await res.json();document.getElementById('galleryCount').textContent=`⬤ ${d.count} enrolled`;}catch(e){}
+}
+</script>
+</body>
+</html>

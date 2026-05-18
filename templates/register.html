@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>FRA – Register</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0f1117;--surface:#1a1d27;--card:#222536;--accent:#4f8ef7;--accent2:#3ddc84;--danger:#f7604f;--warn:#f7c44f;--text:#e8eaf0;--muted:#8891a8;--border:#2e3248}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif}
+    /* lock */
+    #lockScreen{position:fixed;inset:0;background:rgba(10,12,18,.97);display:flex;align-items:center;justify-content:center;z-index:999}
+    .lock-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px 40px;width:360px;text-align:center}
+    .lock-icon{font-size:2.5rem;margin-bottom:12px}
+    .lock-box h2{font-size:1.1rem;font-weight:600;margin-bottom:6px}
+    .lock-box p{font-size:.85rem;color:var(--muted);margin-bottom:22px}
+    .inp-group{text-align:left;margin-bottom:14px}
+    .inp-group label{font-size:.8rem;color:var(--muted);display:block;margin-bottom:5px}
+    .inp-group input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.9rem}
+    .inp-group input:focus{outline:none;border-color:var(--accent)}
+    .btn-login{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:500;cursor:pointer;margin-top:4px}
+    .btn-login:hover{background:#3a7de0}
+    #loginErr{color:var(--danger);font-size:.82rem;margin-top:10px;min-height:16px}
+    /* nav */
+    nav{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;position:sticky;top:0;z-index:100}
+    .logo{font-size:1.2rem;font-weight:700;color:var(--accent)}.logo span{color:var(--accent2)}
+    nav ul{list-style:none;display:flex;gap:4px}
+    nav ul li a{display:block;padding:6px 14px;border-radius:6px;color:var(--muted);text-decoration:none;font-size:.9rem}
+    nav ul li a:hover,nav ul li a.active{background:var(--card);color:var(--text)}
+    .nav-right{display:flex;align-items:center;gap:8px}
+    .user-chip{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.82rem}
+    .user-role{background:#1a2a3a;color:var(--accent);border-radius:10px;padding:1px 8px;font-size:.72rem;font-weight:600}
+    .btn-logout{padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer}
+    /* page */
+    .page{padding:24px;max-width:1200px;margin:0 auto}
+    h1{font-size:1.2rem;font-weight:600;margin-bottom:20px;color:var(--muted)}h1 span{color:var(--text)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .card-header{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+    .card-body{padding:18px}
+    .card-body{padding:18px}
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:5px}
+    .form-group input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.9rem}
+    .form-group input:focus{outline:none;border-color:var(--accent)}
+    /* buttons */
+    .btn{padding:7px 18px;border-radius:7px;border:none;font-size:.85rem;font-weight:500;cursor:pointer;color:#fff;transition:.15s}
+    .btn-primary{background:var(--accent)}.btn-primary:hover{background:#3a7de0}
+    .btn-success{background:#2a7d4f}.btn-success:hover{background:#1e6040}
+    .btn-danger{background:#7d2a2a}.btn-danger:hover{background:#682323}
+    .btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted)}.btn-outline:hover{background:var(--surface);color:var(--text)}
+    /* camera */
+    .cam-wrap{position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:4/3;margin-bottom:10px}
+    #regVideo{width:100%;height:100%;object-fit:cover;display:block}
+    .cam-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    /* photo strip */
+    .strip-label{font-size:.8rem;color:var(--muted);margin-bottom:8px}
+    .strip-label span{color:var(--accent);font-weight:600}
+    .photo-strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;min-height:64px}
+    .thumb-wrap{position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:2px solid var(--border);flex-shrink:0}
+    .thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+    .thumb-del{
+      position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+      background:rgba(247,96,79,.9);border:none;color:#fff;font-size:10px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;
+    }
+    .thumb-num{position:absolute;bottom:2px;left:3px;font-size:9px;color:#fff;background:rgba(0,0,0,.55);border-radius:3px;padding:0 3px}
+    .add-thumb{
+      width:64px;height:64px;border-radius:6px;border:2px dashed var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.4rem;color:var(--muted);cursor:pointer;flex-shrink:0;
+    }
+    .add-thumb:hover{border-color:var(--accent);color:var(--accent)}
+    /* quality badge */
+    .quality-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+    .q-badge{font-size:.72rem;padding:3px 9px;border-radius:12px;border:1px solid}
+    .q-ok{border-color:#2a7d4f;color:#3ddc84;background:#0d2218}
+    .q-warn{border-color:#7d6a2a;color:#f7c44f;background:#221d0d}
+    .q-err{border-color:#7d2a2a;color:#f7604f;background:#2a1010}
+    /* progress */
+    .enroll-progress{margin-bottom:12px;display:none}
+    .prog-bar{height:6px;background:var(--surface);border-radius:3px;overflow:hidden;margin-top:4px}
+    .prog-fill{height:100%;background:var(--accent2);border-radius:3px;transition:width .3s}
+    /* alert */
+    .alert{padding:10px 14px;border-radius:8px;font-size:.88rem;margin-bottom:12px;display:none}
+    .alert-ok{background:#0d2218;color:var(--accent2);border:1px solid #2a7d4f}
+    .alert-err{background:#2a1010;color:var(--danger);border:1px solid #7d2a2a}
+    /* student table */
+    table{width:100%;border-collapse:collapse}
+    th{padding:10px 14px;text-align:left;font-size:.76rem;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+    td{padding:10px 14px;font-size:.86rem;border-bottom:1px solid var(--border)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .del-btn{background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:1rem}
+    .empty{padding:32px;text-align:center;color:var(--muted)}
+    .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:600}
+    .b-manual{background:#1a2a3a;color:var(--accent)}
+    .b-lfw{background:#2a1a3a;color:#b07ef7}
+    .b-photos{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+    /* tip box */
+    .tip-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;color:var(--muted);line-height:1.6}
+    .tip-box strong{color:var(--text)}
+  </style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <h2>Yêu cầu đăng nhập Admin</h2>
+    <p>Trang Register chỉ dành cho tài khoản Admin</p>
+    <div class="inp-group">
+      <label>Tên đăng nhập</label>
+      <input type="text" id="loginUser" value="admin" placeholder="admin"/>
+    </div>
+    <div class="inp-group">
+      <label>Mật khẩu</label>
+      <input type="password" id="loginPass" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') doLogin()"/>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Đăng nhập</button>
+    <div id="loginErr"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="mainContent" style="display:none">
+<nav>
+  <div class="logo">FRA <span>●</span></div>
+  <ul>
+    <li><a href="/">Dashboard</a></li>
+    <li><a href="/attendance.html">Attendance</a></li>
+    <li><a href="/history.html">History</a></li>
+    <li><a href="/register.html" class="active">Register</a></li>
+    <li><a href="/admin.html" style="color:#f7c44f">⚙ Admin</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="user-chip"><span id="navUser">—</span><span class="user-role">ADMIN</span></div>
+    <button class="btn-logout btn" onclick="doLogout()">Đăng xuất</button>
+  </div>
+</nav>
+
+<div class="page">
+  <h1>Đăng ký <span>Sinh viên mới</span></h1>
+  <div class="grid">
+
+    <!-- ── Enroll form ── -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span>📷 Chụp ảnh đăng ký</span>
+          <span id="photoCounter" style="font-size:.82rem;color:var(--muted)"> </span>
+        </div>
+        <div class="card-body">
+
+          <!-- Tip -->
+          <div class="tip-box">
+            <strong>Gợi ý:</strong> Chụp <strong>3–5 ảnh</strong> với các góc nhìn khác nhau
+            (thẳng, hơi nghiêng trái/phải, sáng/tối) để tăng độ chính xác nhận diện.<br>
+            <!-- Hệ thống sẽ tự động <strong>trung bình các embedding</strong> lại thành 1 vector đại diện. -->
+          </div>
+
+          <!-- Camera preview -->
+          <div class="cam-wrap">
+            <video id="regVideo" autoplay playsinline muted></video>
+          </div>
+
+          <!-- Camera controls -->
+          <div class="cam-row">
+            <button class="btn btn-primary" id="btnOpenCam" onclick="openCam()">▶ Mở camera</button>
+            <button class="btn btn-success" id="btnSnap"    onclick="snap()" style="display:none">📸 Chụp ảnh</button>
+            <button class="btn btn-outline" id="btnStopCam" onclick="stopCam()" style="display:none">■ Tắt camera</button>
+          </div>
+
+          <!-- Photo strip -->
+          <div class="strip-label">Ảnh đã chụp: <span id="snapCount">0</span></div>
+          <div class="photo-strip" id="photoStrip">
+            <div class="add-thumb" onclick="openCam()" title="Thêm ảnh">＋</div>
+          </div>
+
+          <!-- Quality indicators (det_score per photo) -->
+          <div class="quality-bar" id="qualityBar"></div>
+
+          <!-- Student info -->
+          <div class="form-group">
+            <label>Họ và tên <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="inpName" placeholder="Nguyễn Văn A"/>
+          </div>
+          <div class="form-group">
+            <label>Mã sinh viên</label>
+            <input type="text" id="inpCode" placeholder="SV001"/>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="enroll-progress" id="enrollProgress">
+            <div style="font-size:.8rem;color:var(--muted)">Đang xử lý embedding…</div>
+            <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+          </div>
+
+          <div class="alert alert-ok"  id="alertOk"></div>
+          <div class="alert alert-err" id="alertErr"></div>
+
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline" onclick="resetForm()" style="flex:0 0 auto">↺ Reset</button>
+            <button class="btn btn-success" onclick="enroll()" style="flex:1;padding:10px">
+              ✅ Đăng ký (<span id="btnPhotoCount">0</span> ảnh)
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Student list ── -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span>Danh sách sinh viên</span>
+          <span id="stuCount" style="font-size:.82rem;color:var(--muted)"></span>
+        </div>
+        <div style="max-height:640px;overflow-y:auto">
+          <table>
+            <thead>
+              <tr><th>Tên</th><th>Mã SV</th><th>Ảnh</th><th>Nguồn</th><th>Ngày thêm</th><th></th></tr>
+            </thead>
+            <tbody id="stuBody">
+              <tr><td colspan="6" class="empty">Đang tải…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <!-- ── Add-photo panel ── -->
+  <div id="addPhotoPanel" style="display:none;margin-top:20px">
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <span>📷 Thêm ảnh cho: <strong id="addPhotoName" style="color:var(--accent2)">—</strong></span>
+        <button class="btn btn-outline" onclick="closeAddPhoto()" style="padding:4px 12px;font-size:.82rem">✕ Đóng</button>
+      </div>
+      <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="cam-wrap" style="margin-bottom:10px"><video id="addVideo" autoplay playsinline muted></video></div>
+          <div class="cam-row">
+            <button class="btn btn-primary" id="addBtnOpen" onclick="addOpenCam()">▶ Mở camera</button>
+            <button class="btn btn-success" id="addBtnSnap" onclick="addSnap()" style="display:none">📸 Chụp</button>
+            <button class="btn btn-outline" id="addBtnStop" onclick="addStopCam()" style="display:none">■ Tắt</button>
+          </div>
+          <div style="font-size:.78rem;color:var(--muted);margin:8px 0 4px">Ảnh sẽ thêm: <strong id="addSnapCount" style="color:var(--text)">0</strong></div>
+          <div id="addPhotoStrip" style="display:flex;gap:6px;flex-wrap:wrap;min-height:52px;margin-bottom:10px">
+            <div onclick="addOpenCam()" style="width:52px;height:52px;border-radius:6px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--muted);cursor:pointer">＋</div>
+          </div>
+          <div id="addQualityBar" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px"></div>
+          <div id="addProgress" style="display:none;margin-bottom:8px">
+            <div style="font-size:.78rem;color:var(--muted);margin-bottom:4px">Đang xử lý…</div>
+            <div style="height:5px;background:var(--surface);border-radius:3px;overflow:hidden">
+              <div id="addProgFill" style="height:100%;background:#3ddc84;border-radius:3px;transition:width .3s;width:0%"></div>
+            </div>
+          </div>
+          <div class="alert alert-ok"  id="addOk"></div>
+          <div class="alert alert-err" id="addErr"></div>
+          <button class="btn btn-success" onclick="submitAddPhotos()" style="width:100%;padding:9px">
+            ➕ Thêm (<span id="addBtnCount">0</span> ảnh)
+          </button>
+        </div>
+        <div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:.82rem;color:var(--muted);line-height:1.8;margin-bottom:14px">
+            <div style="color:var(--text);font-weight:600;margin-bottom:6px"> Chú ý</div>
+            <!-- Ảnh mới sẽ được <strong style="color:var(--text)">thêm vào danh sách embedding</strong> của người này.<br> -->
+            <!-- Hệ thống sẽ <strong style="color:var(--text)">tính lại trung bình</strong> tất cả ảnh (cũ + mới).<br><br> -->
+            Nên chụp ở <strong style="color:var(--text)">góc nhìn chưa có</strong> để tăng độ bao phủ.
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+            <div style="font-size:.78rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Thông tin hiện tại</div>
+            <div style="font-size:.88rem">Tên: <strong id="addInfoName">—</strong></div>
+            <div style="font-size:.88rem;margin-top:4px">Mã SV: <span id="addInfoCode" style="color:var(--muted)">—</span></div>
+            <div style="font-size:.88rem;margin-top:4px">Số ảnh hiện có: <span id="addInfoPhotos" style="color:var(--accent2);font-weight:600">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+</div><!-- /mainContent -->
+
+<script>
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  const d=await res.json();
+  if(!res.ok){document.getElementById('loginErr').textContent='❌ Sai tên đăng nhập hoặc mật khẩu';return;}
+  if(d.role!=='admin'){document.getElementById('loginErr').textContent='⛔ Tài khoản không có quyền Admin';return;}
+  unlock(u);
+}
+function unlock(u){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainContent').style.display='';
+  document.getElementById('navUser').textContent=u;
+  loadStudents();
+}
+async function doLogout(){await fetch('/api/auth/logout',{method:'POST'});location.reload();}
+(async()=>{try{const r=await fetch('/api/auth/me');if(r.ok){const d=await r.json();if(d.role==='admin')unlock(d.username)}}catch(e){}})();
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const MAX_PHOTOS = 10;
+let frames   = [];   // base64 strings
+let scores   = [];   // det_score per photo
+let camStream = null;
+
+// ── Camera ────────────────────────────────────────────────────────────────────
+async function openCam(){
+  if(frames.length >= MAX_PHOTOS){showErr(`Đã đạt tối đa ${MAX_PHOTOS} ảnh.`);return;}
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'},audio:false});
+    document.getElementById('regVideo').srcObject=camStream;
+    document.getElementById('btnOpenCam').style.display='none';
+    document.getElementById('btnSnap').style.display='';
+    document.getElementById('btnStopCam').style.display='';
+  }catch(e){showErr('Không mở được camera: '+e.message);}
+}
+
+function stopCam(){
+  if(camStream)camStream.getTracks().forEach(t=>t.stop());
+  camStream=null;
+  document.getElementById('regVideo').srcObject=null;
+  document.getElementById('btnOpenCam').style.display='';
+  document.getElementById('btnSnap').style.display='none';
+  document.getElementById('btnStopCam').style.display='none';
+}
+
+async function snap(){
+  const v=document.getElementById('regVideo');
+  const c=document.createElement('canvas');
+  c.width=v.videoWidth||640; c.height=v.videoHeight||480;
+  c.getContext('2d').drawImage(v,0,0);
+  const b64=c.toDataURL('image/jpeg',.92);
+
+  // Quick client-side face check via API (preview only, non-blocking)
+  frames.push(b64);
+  scores.push(null); // will fill after verification
+  updateStrip();
+
+  // Verify face exists (async, update quality badge after)
+  verifyFace(b64, frames.length-1);
+
+  // Stop camera after snap so user reviews the photo
+  stopCam();
+}
+
+async function verifyFace(b64, idx){
+  try{
+    const res=await fetch('/api/camera/recognize-test',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({frame:b64})
+    });
+    const d=await res.json();
+    const score = d.faces && d.faces.length>0 ? d.faces[0].det_score : 0;
+    scores[idx]=score;
+    updateQualityBar();
+  }catch(e){}
+}
+
+function updateStrip(){
+  const strip=document.getElementById('photoStrip');
+  const n=frames.length;
+  document.getElementById('snapCount').textContent=n;
+  document.getElementById('photoCounter').textContent=`${n} / ${MAX_PHOTOS} ảnh`;
+  document.getElementById('btnPhotoCount').textContent=n;
+
+  let html=frames.map((b64,i)=>`
+    <div class="thumb-wrap" id="thumb-${i}">
+      <img src="${b64}" alt="photo ${i+1}"/>
+      <button class="thumb-del" onclick="removePhoto(${i})" title="Xóa ảnh này">✕</button>
+      <div class="thumb-num">${i+1}</div>
+    </div>`).join('');
+
+  if(n < MAX_PHOTOS){
+    html += `<div class="add-thumb" onclick="openCam()" title="Thêm ảnh">＋</div>`;
+  }
+  strip.innerHTML=html;
+  updateQualityBar();
+}
+
+function updateQualityBar(){
+  const bar=document.getElementById('qualityBar');
+  bar.innerHTML=scores.map((s,i)=>{
+    if(s===null) return `<span class="q-badge q-warn">Ảnh ${i+1}: đang kiểm tra…</span>`;
+    if(s===0)    return `<span class="q-badge q-err">Ảnh ${i+1}: ❌ Không tìm thấy mặt</span>`;
+    if(s>=0.7)   return `<span class="q-badge q-ok">Ảnh ${i+1}: ✓ ${(s*100).toFixed(0)}%</span>`;
+    return `<span class="q-badge q-warn">Ảnh ${i+1}: ⚠ ${(s*100).toFixed(0)}%</span>`;
+  }).join('');
+}
+
+function removePhoto(idx){
+  frames.splice(idx,1);
+  scores.splice(idx,1);
+  updateStrip();
+  // re-verify remaining since indices shifted
+}
+
+function resetForm(){
+  frames=[]; scores=[];
+  stopCam();
+  updateStrip();
+  document.getElementById('inpName').value='';
+  document.getElementById('inpCode').value='';
+  document.getElementById('qualityBar').innerHTML='';
+  hideAlerts();
+}
+
+// ── Enroll ────────────────────────────────────────────────────────────────────
+async function enroll(){
+  const name=document.getElementById('inpName').value.trim();
+  const code=document.getElementById('inpCode').value.trim();
+
+  if(frames.length===0){showErr('Vui lòng chụp ít nhất 1 ảnh.');return;}
+  if(!name){showErr('Vui lòng nhập họ tên.');return;}
+
+  // Warn if any photo has no face detected
+  const badPhotos=scores.map((s,i)=>s===0?i+1:null).filter(Boolean);
+  if(badPhotos.length>0){
+    if(!confirm(`Ảnh số ${badPhotos.join(', ')} không phát hiện được mặt.\nTiếp tục đăng ký với ${frames.length-badPhotos.length} ảnh còn lại?`))return;
+  }
+
+  hideAlerts();
+  const prog=document.getElementById('enrollProgress');
+  prog.style.display='';
+  setProgress(30);
+
+  try{
+    setProgress(60);
+    const res=await fetch('/api/camera/enroll-multi',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({frames,name,student_code:code})
+    });
+    setProgress(90);
+    const d=await res.json();
+    prog.style.display='none';
+
+    if(!res.ok){showErr(d.error||'Đăng ký thất bại');return;}
+
+    const msg = d.action==='updated'
+      ? `✅ Đã thêm ảnh cho "${name}" — tổng ${d.total_photos} ảnh`
+      : `✅ Đã đăng ký "${name}" với ${d.total_photos} ảnh`;
+    showOk(msg);
+    resetForm();
+    loadStudents();
+  }catch(e){
+    prog.style.display='none';
+    showErr('Lỗi kết nối: '+e.message);
+  }
+}
+
+function setProgress(pct){
+  document.getElementById('progFill').style.width=pct+'%';
+}
+
+// ── Student list ──────────────────────────────────────────────────────────────
+async function deleteStudent(id,name){
+  if(!confirm(`Xóa sinh viên "${name}" và toàn bộ ảnh?`))return;
+  await fetch(`/api/students/${id}`,{method:'DELETE'});
+  loadStudents();
+}
+
+async function loadStudents(){
+  const res=await fetch('/api/students/');
+  const rows=await res.json();
+  document.getElementById('stuCount').textContent=rows.length+' người';
+  const tbody=document.getElementById('stuBody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="empty">Chưa có sinh viên nào</td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>{
+    const srcCls=r.source==='lfw'?'b-lfw':'b-manual';
+    const photos=r.photo_count||1;
+    const dt = r.created_at ? new Date(r.created_at).toLocaleDateString('vi-VN') : '—';
+    return `<tr>
+      <td><strong>${r.name}</strong></td>
+      <td style="color:var(--muted);font-size:.84rem">${r.student_code||'—'}</td>
+      <td><span class="badge b-photos">📷 ${photos}</span></td>
+      <td><span class="badge ${srcCls}">${r.source||'manual'}</span></td>
+      <td style="color:var(--muted);font-size:.82rem">${dt}</td>
+      <td style="display:flex;gap:4px;align-items:center">
+        <button class="btn btn-primary" style="padding:3px 9px;font-size:.74rem"
+          onclick="openAddPhoto(${r.id},'${r.name.replace(/'/g,"\\'")}','${r.student_code||''}',${photos})"
+          title="Thêm ảnh">＋ Ảnh</button>
+        <button class="del-btn" onclick="deleteStudent(${r.id},'${r.name.replace(/'/g,"\\'")}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Add-photo panel ────────────────────────────────────────────────────────────
+let addStudentId=null, addFrames=[], addScores=[], addCamStream=null;
+const ADD_MAX=10;
+
+function openAddPhoto(id, name, code, currentPhotos){
+  addStudentId=id; addFrames=[]; addScores=[];
+  document.getElementById('addPhotoName').textContent=name;
+  document.getElementById('addInfoName').textContent=name;
+  document.getElementById('addInfoCode').textContent=code||'—';
+  document.getElementById('addInfoPhotos').textContent=currentPhotos;
+  document.getElementById('addPhotoPanel').style.display='';
+  document.getElementById('addOk').style.display='none';
+  document.getElementById('addErr').style.display='none';
+  addUpdateStrip();
+  // Scroll to panel
+  document.getElementById('addPhotoPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function closeAddPhoto(){
+  addStopCam();
+  document.getElementById('addPhotoPanel').style.display='none';
+  addFrames=[]; addScores=[]; addStudentId=null;
+}
+
+async function addOpenCam(){
+  if(addFrames.length>=ADD_MAX){showAddErr(`Tối đa ${ADD_MAX} ảnh.`);return;}
+  try{
+    addCamStream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480},audio:false});
+    document.getElementById('addVideo').srcObject=addCamStream;
+    document.getElementById('addBtnOpen').style.display='none';
+    document.getElementById('addBtnSnap').style.display='';
+    document.getElementById('addBtnStop').style.display='';
+  }catch(e){showAddErr('Không mở được camera: '+e.message);}
+}
+
+function addStopCam(){
+  if(addCamStream)addCamStream.getTracks().forEach(t=>t.stop());
+  addCamStream=null;
+  const v=document.getElementById('addVideo');
+  if(v) v.srcObject=null;
+  document.getElementById('addBtnOpen').style.display='';
+  document.getElementById('addBtnSnap').style.display='none';
+  document.getElementById('addBtnStop').style.display='none';
+}
+
+function addSnap(){
+  const v=document.getElementById('addVideo');
+  const c=document.createElement('canvas');
+  c.width=v.videoWidth||640; c.height=v.videoHeight||480;
+  c.getContext('2d').drawImage(v,0,0);
+  const b64=c.toDataURL('image/jpeg',.92);
+  addFrames.push(b64); addScores.push(null);
+  addUpdateStrip();
+  addVerifyFace(b64, addFrames.length-1);
+  addStopCam();
+}
+
+async function addVerifyFace(b64, idx){
+  try{
+    const res=await fetch('/api/camera/recognize-test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({frame:b64})});
+    const d=await res.json();
+    addScores[idx]=d.faces&&d.faces.length>0?d.faces[0].det_score:0;
+    addUpdateQuality();
+  }catch(e){}
+}
+
+function addRemovePhoto(idx){addFrames.splice(idx,1);addScores.splice(idx,1);addUpdateStrip();}
+
+function addUpdateStrip(){
+  const n=addFrames.length;
+  document.getElementById('addSnapCount').textContent=n;
+  document.getElementById('addBtnCount').textContent=n;
+  let html=addFrames.map((b64,i)=>`
+    <div style="position:relative;width:52px;height:52px;border-radius:6px;overflow:hidden;border:2px solid var(--border);flex-shrink:0">
+      <img src="${b64}" style="width:100%;height:100%;object-fit:cover"/>
+      <button onclick="addRemovePhoto(${i})"
+        style="position:absolute;top:1px;right:1px;width:16px;height:16px;border-radius:50%;background:rgba(247,96,79,.9);border:none;color:#fff;font-size:9px;cursor:pointer">✕</button>
+      <span style="position:absolute;bottom:1px;left:2px;font-size:9px;color:#fff;background:rgba(0,0,0,.6);border-radius:2px;padding:0 2px">${i+1}</span>
+    </div>`).join('');
+  if(n<ADD_MAX) html+=`<div onclick="addOpenCam()" style="width:52px;height:52px;border-radius:6px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--muted);cursor:pointer">＋</div>`;
+  document.getElementById('addPhotoStrip').innerHTML=html;
+  addUpdateQuality();
+}
+
+function addUpdateQuality(){
+  document.getElementById('addQualityBar').innerHTML=addScores.map((s,i)=>{
+    const base='display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;border:1px solid;';
+    if(s===null) return `<span style="${base}border-color:#7d6a2a;color:#f7c44f;background:#221d0d">Ảnh ${i+1}: đang kiểm tra…</span>`;
+    if(s===0)    return `<span style="${base}border-color:#7d2a2a;color:#f7604f;background:#2a1010">Ảnh ${i+1}: ❌ Không thấy mặt</span>`;
+    if(s>=0.7)   return `<span style="${base}border-color:#2a7d4f;color:#3ddc84;background:#0d2218">Ảnh ${i+1}: ✓ ${(s*100).toFixed(0)}%</span>`;
+    return `<span style="${base}border-color:#7d6a2a;color:#f7c44f;background:#221d0d">Ảnh ${i+1}: ⚠ ${(s*100).toFixed(0)}%</span>`;
+  }).join('');
+}
+
+async function submitAddPhotos(){
+  if(!addFrames.length){showAddErr('Vui lòng chụp ít nhất 1 ảnh.');return;}
+  if(!addStudentId){showAddErr('Lỗi: chưa chọn sinh viên.');return;}
+  const badIdx=addScores.map((s,i)=>s===0?i+1:null).filter(Boolean);
+  if(badIdx.length&&!confirm(`Ảnh số ${badIdx.join(', ')} không thấy mặt. Tiếp tục?`))return;
+  document.getElementById('addProgress').style.display='';
+  document.getElementById('addProgFill').style.width='40%';
+  try{
+    const res=await fetch('/api/camera/enroll-add-photo',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({student_id:addStudentId,frames:addFrames})
+    });
+    document.getElementById('addProgFill').style.width='100%';
+    const d=await res.json();
+    setTimeout(()=>document.getElementById('addProgress').style.display='none',400);
+    if(!res.ok){showAddErr(d.error||'Thất bại');return;}
+    showAddOk(`✅ Đã thêm ${addFrames.length} ảnh — tổng ${d.total_photos} ảnh`);
+    document.getElementById('addInfoPhotos').textContent=d.total_photos;
+    addFrames=[]; addScores=[];
+    addUpdateStrip();
+    loadStudents();
+  }catch(e){
+    document.getElementById('addProgress').style.display='none';
+    showAddErr('Lỗi: '+e.message);
+  }
+}
+
+function showAddOk(m){const e=document.getElementById('addOk');e.textContent=m;e.style.display='block';document.getElementById('addErr').style.display='none';}
+function showAddErr(m){const e=document.getElementById('addErr');e.textContent=m;e.style.display='block';document.getElementById('addOk').style.display='none';}
+
+function showOk(m){const e=document.getElementById('alertOk');e.textContent=m;e.style.display='block';document.getElementById('alertErr').style.display='none';}
+function showErr(m){const e=document.getElementById('alertErr');e.textContent=m;e.style.display='block';document.getElementById('alertOk').style.display='none';}
+function hideAlerts(){document.getElementById('alertOk').style.display='none';document.getElementById('alertErr').style.display='none';}
+</script>
+</body>
+</html>
