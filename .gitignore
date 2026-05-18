@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+data/charts/
+data/gallery_lfw.npz
+models/insightface/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
