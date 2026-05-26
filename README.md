@@ -135,9 +135,8 @@ FRA-main/
 git clone https://github.com/<your-username>/FRA-main.git
 cd FRA-main
 
-python -m venv venv
-# Windows
-venv\Scripts\activate
+python -m venv venv\_gpu
+venv\_gpu\\Scripts\\activate       # Windows
 # Linux / macOS
 source venv/bin/activate
 ```
