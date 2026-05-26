@@ -176,7 +176,7 @@ python tools/enroll_deepfunneled.py --limit 100
 ### 5. Chạy ứng dụng
 
 ```bash
-python app.py
+python app.py --ssl
 ```
 
 Mở trình duyệt: **http://localhost:5000**
